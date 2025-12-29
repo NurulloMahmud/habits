@@ -1,0 +1,63 @@
+ambassadors/
+├── cmd/
+│   └── api/
+│       └── main.go              # entry point
+│
+├── internal/
+│   ├── ambassador/              # domain: ambassador
+│   │   ├── handler.go           # HTTP handlers
+│   │   ├── service.go           # business logic
+│   │   ├── repository.go        # database operations
+│   │   ├── model.go             # domain model
+│   │   └── dto.go               # request/response types
+│   │
+│   ├── user/                    # domain: user
+│   │   ├── handler.go
+│   │   ├── service.go
+│   │   ├── repository.go
+│   │   ├── model.go
+│   │   └── dto.go
+│   │
+│   ├── contact/                 # domain: contact
+│   │   ├── handler.go
+│   │   ├── service.go
+│   │   ├── repository.go
+│   │   └── model.go
+│   │
+│   ├── post/                    # domain: post
+│   │   └── ...
+│   │
+│   ├── payment/                 # domain: payment
+│   │   └── ...
+│   │
+│   ├── auth/                    # cross-cutting: authentication
+│   │   ├── middleware.go
+│   │   ├── jwt.go
+│   │   └── service.go
+│   │
+│   ├── platform/                # infrastructure
+│   │   ├── database/
+│   │   │   └── postgres.go
+│   │   ├── storage/
+│   │   │   ├── s3.go
+│   │   │   └── local.go
+│   │   └── telegram/
+│   │       └── bot.go
+│   │
+│   └── server/                  # HTTP server setup
+│       ├── server.go
+│       └── routes.go
+│
+├── pkg/                         # reusable packages (if needed)
+│   └── response/
+│       └── json.go              # standard JSON responses
+│
+├── migrations/
+│   └── *.sql
+│
+├── config/
+│   └── config.go
+│
+├── Makefile
+├── go.mod
+└── README.md
