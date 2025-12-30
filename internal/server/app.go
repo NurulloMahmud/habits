@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/NurulloMahmud/habits/config"
-	"github.com/NurulloMahmud/habits/internal/auth"
+	"github.com/NurulloMahmud/habits/internal/middleware"
 	"github.com/NurulloMahmud/habits/internal/platform/database"
 	"github.com/NurulloMahmud/habits/internal/user"
 	"github.com/NurulloMahmud/habits/migrations"
@@ -17,9 +17,9 @@ import (
 type Application struct {
 	Logger      *log.Logger
 	userHandler user.UserHandler
-	JWTService  auth.JWTService
 	DB          *sql.DB
 	Cfg         config.Config
+	middleware  middleware.Middleware
 }
 
 func NewApplication(cfg config.Config) (*Application, error) {
@@ -40,22 +40,26 @@ func NewApplication(cfg config.Config) (*Application, error) {
 
 	// setup services
 	userService := user.NewService(userRepo)
-	jwtService := auth.NewJWTService(cfg, userRepo, logger)
 
 	// setup handlers
 	userHandler := user.NewHandler(userService, logger)
 
+	// setup middlewares
+	appMiddleware := middleware.NewMiddleware(logger, userRepo, cfg)
+
 	app := &Application{
 		Logger:      logger,
 		userHandler: *userHandler,
-		JWTService:  jwtService,
+		middleware:  *appMiddleware,
+		DB:          pgDB,
+		Cfg:         cfg,
 	}
 
 	return app, nil
 }
 
 func (a *Application) testHandler(w http.ResponseWriter, r *http.Request) {
-	user := auth.GetUser(r)
+	user := middleware.GetUser(r)
 	a.Logger.Printf("is anonymous: %t", user.IsAnonymous())
 	response.WriteJSON(w, http.StatusOK, response.Envelope{"user": user})
 }

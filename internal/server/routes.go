@@ -8,7 +8,7 @@ func (app *Application) Routes() *chi.Mux {
 	r.Post("/api/v1/register", app.userHandler.Register)
 
 	r.Group(func(r chi.Router) {
-		r.Use(app.JWTService.Authenticate)
+		r.Use(app.middleware.Authenticate)
 		r.Get("/test", app.testHandler)
 	})
 

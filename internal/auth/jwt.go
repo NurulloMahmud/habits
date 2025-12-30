@@ -1,22 +1,50 @@
 package auth
 
 import (
-	"log"
+	"fmt"
+	"time"
 
-	"github.com/NurulloMahmud/habits/config"
-	"github.com/NurulloMahmud/habits/internal/user"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-type JWTService struct {
-	cfg      config.Config
-	userRepo user.Repository
-	logger   *log.Logger
+type TokenClaims struct {
+	ID       int64     `json:"id"`
+	Email    string    `json:"email"`
+	UserRole string    `json:"user_role"`
+	Expiry   time.Time `json:"exp"`
+	jwt.RegisteredClaims
 }
 
-func NewJWTService(cfg config.Config, repo user.Repository, logger *log.Logger) JWTService {
-	return JWTService{
-		cfg:      cfg,
-		userRepo: repo,
-		logger:   logger,
+func GenerateAccessToken(user TokenClaims, jwtSecret string) (string, error) {
+	claims := jwt.MapClaims{
+		"email": user.Email,
+		"id":    user.ID,
+		"role":  user.UserRole,
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
 	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func VerifyToken(tokenString, jwtSecret string) (*TokenClaims, error) {
+	claims := &TokenClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return claims, nil
 }
