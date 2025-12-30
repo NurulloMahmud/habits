@@ -39,7 +39,7 @@ func NewApplication(cfg config.Config) (*Application, error) {
 	userRepo := user.NewRepository(pgDB)
 
 	// setup services
-	userService := user.NewService(userRepo)
+	userService := user.NewService(userRepo, cfg)
 
 	// setup handlers
 	userHandler := user.NewHandler(userService, logger)

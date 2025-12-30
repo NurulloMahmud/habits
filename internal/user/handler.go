@@ -51,3 +51,38 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	response.WriteJSON(w, http.StatusCreated, response.Envelope{"data": data})
 }
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req loginRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	user, token, err := h.service.Login(r.Context(), *req.Email, *req.Password)
+	if err != nil {
+		switch err {
+		case errInvalidCredentials:
+			response.BadRequest(w, r, err, h.logger)
+			return
+		case errUserInactive:
+			response.Unauthorized(w, r, "Unauthorized")
+			return
+		case errUserLocked:
+			response.Unauthorized(w, r, "Unauthorized")
+			return
+		case errMatchingPassword:
+			response.InternalServerError(w, r, err, h.logger)
+			return
+		default:
+			response.InternalServerError(w, r, err, h.logger)
+			return
+		}
+	}
+
+	response.WriteJSON(w, http.StatusOK, response.Envelope{
+		"access_token": token,
+		"user":         user,
+	})
+}

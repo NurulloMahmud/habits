@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,14 +57,4 @@ func (p *password) Matches(plaintextPassword string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-type UserTokenClaim struct {
-	ID        int64   `json:"id"`
-	Email     string  `json:"email"`
-	FirstName *string `json:"first_name,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	UserRole  string  `json:"user_role,omitempty"`
-	Expiry    int64   `json:"exp"`
-	jwt.RegisteredClaims
 }

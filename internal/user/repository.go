@@ -10,8 +10,9 @@ type Repository interface {
 	Create(ctx context.Context, u User) (*User, error)
 	Get(ctx context.Context, id int64, email string) (*User, error)
 	List()
-	Update()
+	Update(ctx context.Context, user User) error
 	Delete()
+	Unlock(ctx context.Context, id int64) error
 }
 
 type postgresRepo struct {
@@ -82,10 +83,41 @@ func (r *postgresRepo) List() {
 	return
 }
 
-func (r *postgresRepo) Update() {
-	return
+func (r *postgresRepo) Update(ctx context.Context, user User) error {
+	query := `
+	UPDATE users
+	SET email = $1, 
+		first_name = $2, 
+		last_name = $3, 
+		is_locked = $4, 
+		is_active = $5, 
+		last_failed_login = $6,
+		failed_attempts = $7,
+		user_role = $8
+		password_hash = $9
+	WHERE id = $10`
+	_, err := r.db.ExecContext(
+		ctx, query,
+		user.Email,
+		user.FirstName,
+		user.LastName,
+		user.IsLocked,
+		user.IsActive,
+		user.LastFailedLogin,
+		user.FailedAttempts,
+		user.UserRole,
+		user.PasswordHash.hash,
+		user.ID,
+	)
+	return err
 }
 
 func (r *postgresRepo) Delete() {
 	return
+}
+
+func (r *postgresRepo) Unlock(ctx context.Context, id int64) error {
+	query := `UPDATE users SET is_locked = false, failed_attempts = 0 WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
 }
