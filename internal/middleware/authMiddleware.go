@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/NurulloMahmud/habits/internal/auth"
-	"github.com/NurulloMahmud/habits/internal/user"
+	"github.com/NurulloMahmud/habits/pkg/context"
 	"github.com/NurulloMahmud/habits/pkg/response"
 )
 
@@ -20,7 +20,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 
 		if authHeader == "" {
-			r = SetUser(r, user.AnonymousUser)
+			r = context.SetUser(r, context.AnonymousUser)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -49,15 +49,25 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		r = SetUser(r, user)
+		contextUser := context.User{
+			ID:        user.ID,
+			Email:     user.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			UserRole:  user.UserRole,
+			IsActive:  user.IsActive,
+			IsLocked:  user.IsLocked,
+		}
+
+		r = context.SetUser(r, &contextUser)
 		next.ServeHTTP(w, r)
 	})
 }
 
 func (m *Middleware) RequireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userContext := GetUser(r)
-		if userContext.IsAnonymous() {
+		userContext := context.GetUser(r)
+		if userContext.IsAnonymous() || !userContext.IsActive || userContext.IsLocked {
 			response.Unauthorized(w, r, "Unauthoized")
 			return
 		}
@@ -68,8 +78,8 @@ func (m *Middleware) RequireUser(next http.Handler) http.Handler {
 
 func (m *Middleware) RequireAdminUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userContext := GetUser(r)
-		if userContext.IsAnonymous() {
+		userContext := context.GetUser(r)
+		if userContext.IsAnonymous() || !userContext.IsActive || userContext.IsLocked {
 			response.Unauthorized(w, r, "Unauthoized")
 			return
 		}

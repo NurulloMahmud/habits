@@ -26,11 +26,11 @@ type UserService struct {
 func NewService(repo Repository, cfg config.Config) UserService {
 	return UserService{
 		repo: repo,
-		cfg: cfg,
+		cfg:  cfg,
 	}
 }
 
-func (s *UserService) Register(ctx context.Context, req registerUserRequest) (*User, error) {
+func (s *UserService) register(ctx context.Context, req registerUserRequest) (*User, error) {
 	existingUser, err := s.repo.Get(ctx, 0, req.Email)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *UserService) Register(ctx context.Context, req registerUserRequest) (*U
 	return user, nil
 }
 
-func (s *UserService) Login(ctx context.Context, email, password string) (*User, string, error) {
+func (s *UserService) login(ctx context.Context, email, password string) (*User, string, error) {
 	user, err := s.repo.Get(ctx, 0, email)
 	if err != nil {
 		return nil, "", err
@@ -126,4 +126,52 @@ func (s *UserService) Login(ctx context.Context, email, password string) (*User,
 	}
 
 	return user, token, nil
+}
+
+func (s *UserService) update(ctx context.Context, id int64, req updateUserRequest) error {
+	user, err := s.repo.Get(ctx, id, "")
+	if err != nil {
+		return err
+	}
+
+	matched, err := user.PasswordHash.Matches(*req.OldPassword)
+	if err != nil {
+		return err
+	}
+
+	if !matched {
+		return errInvalidCredentials
+	}
+
+	if req.Email != nil {
+		existingUser, err := s.repo.Get(ctx, 0, *req.Email)
+		if err != nil {
+			return err
+		}
+
+		if existingUser != nil && existingUser.ID != user.ID {
+			return errEmailTaken
+		}
+		user.Email = *req.Email
+	}
+
+	if req.FirstName != nil {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != nil {
+		user.LastName = req.LastName
+	}
+	if req.NewPassword != nil {
+		err = user.PasswordHash.Set(*req.NewPassword)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.repo.Update(ctx, *user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

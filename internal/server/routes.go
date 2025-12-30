@@ -12,6 +12,9 @@ func (app *Application) Routes() *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(app.middleware.Authenticate)
 		r.Get("/test", app.testHandler)
+
+		r.Use(app.middleware.RequireUser)
+		r.Patch("/api/v1/update", app.userHandler.Update)
 	})
 
 	return r

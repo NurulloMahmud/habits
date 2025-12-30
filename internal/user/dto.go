@@ -86,3 +86,38 @@ func (r *loginRequest) validateLoginRequest() error {
 
 	return nil
 }
+
+type updateUserRequest struct {
+	Email              *string `json:"email"`
+	FirstName          *string `json:"first_name"`
+	LastName           *string `json:"last_name"`
+	OldPassword        *string `json:"old_password"`
+	NewPassword        *string `json:"new_password"`
+	NewPasswordConfirm *string `json:"new_password_confirm"`
+}
+
+func (r *updateUserRequest) validateUpdateUserRequest() error {
+	if r.Email != nil {
+		err := validateEmailFormat(*r.Email)
+		if err != nil {
+			return errEmailFormat
+		}
+	}
+	return nil
+}
+
+func (r *updateUserRequest) validatePasswordUpdate() error {
+	if r.OldPassword == nil {
+		return errPasswordRequired
+	}
+	if r.NewPassword == nil || r.NewPasswordConfirm == nil {
+		return errors.New("new_password and new_password_confirm fields are required")
+	}
+	if len(*r.NewPassword) > 32 || len(*r.NewPassword) < 6 {
+		return errPasswordLen
+	}
+	if r.NewPassword != r.NewPasswordConfirm {
+		return errPasswordsNotMatch
+	}
+	return nil
+}

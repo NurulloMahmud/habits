@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	cx "github.com/NurulloMahmud/habits/pkg/context"
 	"github.com/NurulloMahmud/habits/pkg/response"
 )
 
@@ -39,7 +40,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := h.service.Register(r.Context(), req)
+	data, err := h.service.register(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, errEmailTaken) {
 			response.BadRequest(w, r, err, h.logger)
@@ -60,7 +61,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, token, err := h.service.Login(r.Context(), *req.Email, *req.Password)
+	user, token, err := h.service.login(r.Context(), *req.Email, *req.Password)
 	if err != nil {
 		switch err {
 		case errInvalidCredentials:
@@ -85,4 +86,38 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"access_token": token,
 		"user":         user,
 	})
+}
+
+func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	var req updateUserRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	err = req.validateUpdateUserRequest()
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	user := cx.GetUser(r)
+	err = h.service.update(r.Context(), user.ID, req)
+	
+	if err != nil {
+		switch err {
+		case errInvalidCredentials:
+			response.BadRequest(w, r, err, h.logger)
+			return
+		case errEmailTaken:
+			response.BadRequest(w, r, err, h.logger)
+			return
+		default:
+			response.InternalServerError(w, r, err, h.logger)
+			return
+		}
+	}
+
+	response.WriteJSON(w, http.StatusOK, response.Envelope{"message": "user updated successfully"})
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/NurulloMahmud/habits/internal/platform/database"
 	"github.com/NurulloMahmud/habits/internal/user"
 	"github.com/NurulloMahmud/habits/migrations"
+	"github.com/NurulloMahmud/habits/pkg/context"
 	"github.com/NurulloMahmud/habits/pkg/response"
 )
 
@@ -59,7 +60,6 @@ func NewApplication(cfg config.Config) (*Application, error) {
 }
 
 func (a *Application) testHandler(w http.ResponseWriter, r *http.Request) {
-	user := middleware.GetUser(r)
-	a.Logger.Printf("is anonymous: %t", user.IsAnonymous())
+	user := context.GetUser(r)
 	response.WriteJSON(w, http.StatusOK, response.Envelope{"user": user})
 }
