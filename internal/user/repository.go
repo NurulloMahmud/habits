@@ -93,7 +93,7 @@ func (r *postgresRepo) Update(ctx context.Context, user User) error {
 		is_active = $5, 
 		last_failed_login = $6,
 		failed_attempts = $7,
-		user_role = $8
+		user_role = $8,
 		password_hash = $9
 	WHERE id = $10`
 	_, err := r.db.ExecContext(
