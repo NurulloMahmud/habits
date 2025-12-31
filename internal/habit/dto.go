@@ -9,13 +9,14 @@ import (
 )
 
 var (
-	errNameEmpty      = errors.New("name field is required and cannot be empty")
-	errDescEmpty      = errors.New("description field is required and cannot be empty")
-	errStartDateEmpty = errors.New("start_date field is required and cannot be empty")
-	errEndDateEmpty   = errors.New("end_date field is required and cannot be empty")
-	errTypeConflict   = errors.New("Habit must be either quantity based or duration. You cannot provide both daily_count and daily_duration fields")
-	errTypeEmpty      = errors.New("Habit must be either quantity based or duration based. Please provide either daily_count or daily_duration")
-	errInvalidStatus  = errors.New("Habit status should be either public or private")
+	errNameEmpty            = errors.New("name field is required and cannot be empty")
+	errDescEmpty            = errors.New("description field is required and cannot be empty")
+	errStartDateEmpty       = errors.New("start_date field is required and cannot be empty")
+	errEndDateEmpty         = errors.New("end_date field is required and cannot be empty")
+	errTypeConflict         = errors.New("Habit must be either quantity based or duration. You cannot provide both daily_count and daily_duration fields")
+	errTypeEmpty            = errors.New("Habit must be either quantity based or duration based. Please provide either daily_count or daily_duration")
+	errInvalidStatus        = errors.New("Habit status should be either public or private")
+	errInvalidDailyDuration = errors.New("daily duration minutes must be greater than or equal to 1")
 )
 
 type createHabitRequest struct {
@@ -53,6 +54,9 @@ func (r *createHabitRequest) validateCreateRequest(createdBy int64) error {
 	}
 	if r.PrivacyStatus != "public" && r.PrivacyStatus != "private" {
 		return errInvalidStatus
+	}
+	if r.DailyDuration != nil && *r.DailyDuration < 1 {
+		return errInvalidDailyDuration
 	}
 
 	if r.PrivacyStatus == "private" {
