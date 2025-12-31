@@ -1,0 +1,67 @@
+package habit
+
+import (
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+var (
+	errNameEmpty      = errors.New("name field is required and cannot be empty")
+	errDescEmpty      = errors.New("description field is required and cannot be empty")
+	errStartDateEmpty = errors.New("start_date field is required and cannot be empty")
+	errEndDateEmpty   = errors.New("end_date field is required and cannot be empty")
+	errTypeConflict   = errors.New("Habit must be either quantity based or duration. You cannot provide both daily_count and daily_duration fields")
+	errTypeEmpty      = errors.New("Habit must be either quantity based or duration based. Please provide either daily_count or daily_duration")
+	errInvalidStatus  = errors.New("Habit status should be either public or private")
+)
+
+type createHabitRequest struct {
+	ID            int        `json:"id"`
+	Name          string     `json:"name"`
+	Description   string     `json:"description"`
+	StartDate     *time.Time `json:"start_date"`
+	EndDate       *time.Time `json:"end_date"`
+	DailyCount    *int64     `json:"daily_count"`
+	DailyDuration *int64     `json:"daily_duration"`
+	PrivacyStatus string     `json:"privacy_status"`
+	Identifier    *string    `json:"-"`
+	CreatedBy     int64      `json:"-"`
+	CreatedAt     time.Time  `json:"-"`
+}
+
+func (r *createHabitRequest) validateCreateRequest(createdBy int64) error {
+	if strings.TrimSpace(r.Name) == "" {
+		return errNameEmpty
+	}
+	if strings.TrimSpace(r.Description) == "" {
+		return errDescEmpty
+	}
+	if r.StartDate == nil {
+		return errStartDateEmpty
+	}
+	if r.EndDate == nil {
+		return errEndDateEmpty
+	}
+	if r.DailyCount != nil && r.DailyDuration != nil {
+		return errTypeConflict
+	}
+	if r.DailyCount == nil && r.DailyDuration == nil {
+		return errTypeEmpty
+	}
+	if r.PrivacyStatus != "public" && r.PrivacyStatus != "private" {
+		return errInvalidStatus
+	}
+
+	if r.PrivacyStatus == "private" {
+		identifier := uuid.New().String()
+		r.Identifier = &identifier
+	}
+
+	r.CreatedBy = createdBy
+	r.CreatedAt = time.Now().UTC()
+
+	return nil
+}

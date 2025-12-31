@@ -14,7 +14,7 @@ func Load() *Config {
 		Env:         getEnv("ENV", "development"),
 		ServerAddr:  getEnv("SERVER_ADDRESS", ":8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/habits?sslmode=disable"),
-		JWTSecret:   getEnv("JWT_SECRET", "unsecure-secret-key"),
+		JWTSecret:   getEnv("JWT_SECRET", "9b36f2a2-f8a1-4826-90a6-71d16ca14932"),
 	}
 }
 

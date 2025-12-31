@@ -8,10 +8,9 @@ import (
 )
 
 type TokenClaims struct {
-	ID       int64     `json:"id"`
-	Email    string    `json:"email"`
-	UserRole string    `json:"user_role"`
-	Expiry   time.Time `json:"exp"`
+	ID       int64  `json:"id"`
+	Email    string `json:"email"`
+	UserRole string `json:"user_role"`
 	jwt.RegisteredClaims
 }
 

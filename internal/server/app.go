@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/NurulloMahmud/habits/config"
+	"github.com/NurulloMahmud/habits/internal/habit"
 	"github.com/NurulloMahmud/habits/internal/middleware"
 	"github.com/NurulloMahmud/habits/internal/platform/database"
 	"github.com/NurulloMahmud/habits/internal/user"
@@ -16,11 +17,12 @@ import (
 )
 
 type Application struct {
-	Logger      *log.Logger
-	userHandler user.UserHandler
-	DB          *sql.DB
-	Cfg         config.Config
-	middleware  middleware.Middleware
+	Logger       *log.Logger
+	userHandler  user.UserHandler
+	habitHandler habit.HabitHandler
+	DB           *sql.DB
+	Cfg          config.Config
+	middleware   middleware.Middleware
 }
 
 func NewApplication(cfg config.Config) (*Application, error) {
@@ -38,22 +40,26 @@ func NewApplication(cfg config.Config) (*Application, error) {
 
 	// set up repositories
 	userRepo := user.NewRepository(pgDB)
+	habitRepo := habit.NewRepo(pgDB)
 
 	// setup services
 	userService := user.NewService(userRepo, cfg)
+	habitService := habit.NewHabitService(habitRepo)
 
 	// setup handlers
 	userHandler := user.NewHandler(userService, logger)
+	habitHandler := habit.NewHandler(habitService, logger)
 
 	// setup middlewares
 	appMiddleware := middleware.NewMiddleware(logger, userRepo, cfg)
 
 	app := &Application{
-		Logger:      logger,
-		userHandler: *userHandler,
-		middleware:  *appMiddleware,
-		DB:          pgDB,
-		Cfg:         cfg,
+		Logger:       logger,
+		userHandler:  *userHandler,
+		habitHandler: *habitHandler,
+		middleware:   *appMiddleware,
+		DB:           pgDB,
+		Cfg:          cfg,
 	}
 
 	return app, nil

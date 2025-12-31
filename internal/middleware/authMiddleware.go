@@ -49,6 +49,12 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		if !user.IsActive || user.IsLocked {
+			r = context.SetUser(r, context.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		contextUser := context.User{
 			ID:        user.ID,
 			Email:     user.Email,
