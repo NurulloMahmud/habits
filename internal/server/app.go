@@ -69,3 +69,7 @@ func (a *Application) testHandler(w http.ResponseWriter, r *http.Request) {
 	user := context.GetUser(r)
 	response.WriteJSON(w, http.StatusOK, response.Envelope{"user": user})
 }
+
+func (a *Application) health(w http.ResponseWriter, r *http.Request) {
+	response.WriteJSON(w, http.StatusOK, response.Envelope{"status": "available"})
+}

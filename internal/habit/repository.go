@@ -7,6 +7,9 @@ import (
 
 type HabitRepository interface {
 	create(ctx context.Context, req createHabitRequest) (*createHabitRequest, error)
+	get(ctx context.Context, id int64, identifier string) (*getHabitResponse, error)
+	update(ctx context.Context, data getHabitResponse) error
+	delete(ctx context.Context, id int64) error
 }
 
 type postgresHabitRepository struct {
@@ -42,4 +45,90 @@ func (r *postgresHabitRepository) create(ctx context.Context, req createHabitReq
 	}
 
 	return &req, nil
+}
+
+func (r *postgresHabitRepository) get(ctx context.Context, id int64, identifier string) (*getHabitResponse, error) {
+	creator := habitCreator{}
+	habit := getHabitResponse{}
+
+	query := `
+	SELECT 
+		h.id id, 
+		h.name name, 
+		h.description deescription, 
+		h.start_date start_date,  
+		h.end_date end_date, 
+		h.daily_count daily_count,  
+		h.daily_duration daily_duration,
+		h.privacy_status privacy_status,
+		h.identifier identifier,
+		h.created_at created_at,
+		u.id creator_id,
+		u.email creator_email,
+		u.first_name creator_first_name,
+		u.last_name creator_last_name
+	FROM habits h
+	JOIN users u ON u.id = h.created_by
+	WHERE (h.identifier IS NOT NULL AND identifier = $1) OR h.id = $2`
+
+	err := r.db.QueryRowContext(ctx, query, identifier, id).Scan(
+		&habit.ID,
+		&habit.Name,
+		&habit.Description,
+		&habit.StartDate,
+		&habit.EndDate,
+		&habit.DailyCount,
+		&habit.DailyDuration,
+		&habit.PrivacyStatus,
+		&habit.Identifier,
+		&habit.CreatedAt,
+		&creator.ID,
+		&creator.Email,
+		&creator.FirstName,
+		&creator.LastName,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	habit.Creator = creator
+	return &habit, nil
+}
+
+func (r *postgresHabitRepository) update(ctx context.Context, data getHabitResponse) error {
+	query := `
+	UPDATE habits
+	SET name = $1, 
+		description = $2, 
+		start_date = $3, 
+		end_date = $4, 
+		daily_count = $5, 
+		daily_duration = $6 * INTERVAL '1 minute',
+		privacy_status = $7,
+		identifier = $8
+	WHERE id = $9`
+
+	_, err := r.db.ExecContext(
+		ctx, query,
+		data.Name,
+		data.Description,
+		data.StartDate,
+		data.EndDate,
+		data.DailyCount,
+		data.DailyDuration,
+		data.PrivacyStatus,
+		data.Identifier,
+		data.ID)
+
+	return err
+}
+
+func (r *postgresHabitRepository) delete(ctx context.Context, id int64) error {
+	query := `DELETE FROM habits WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
 }

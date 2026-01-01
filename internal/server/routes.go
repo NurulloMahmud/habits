@@ -5,6 +5,10 @@ import "github.com/go-chi/chi/v5"
 func (app *Application) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
+	// test & health
+	r.Get("/health", app.health)
+	r.Get("/test", app.testHandler)
+
 	// register & login
 	r.Post("/api/v1/register", app.userHandler.Register)
 	r.Post("/api/v1/login", app.userHandler.Login)
@@ -21,6 +25,7 @@ func (app *Application) Routes() *chi.Mux {
 
 			// habits
 			r.Post("/api/v1/habits", app.habitHandler.HandleCreate)
+			r.Patch("/api/v1/habits/{id}", app.habitHandler.HandleUpdate)
 		})
 	})
 
