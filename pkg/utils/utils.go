@@ -22,6 +22,15 @@ func ReadIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
+func ReadIdentifierParam(r *http.Request) (string, error) {
+	idParam := chi.URLParam(r, "identifier")
+	if idParam == "" {
+		return "", errors.New("invalid id parameter")
+	}
+
+	return idParam, nil
+}
+
 func ReadString(r *http.Request, key string, defaultValue string) string {
 	s := r.URL.Query().Get(key)
 	if s == "" {

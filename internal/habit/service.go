@@ -33,12 +33,7 @@ func (s *Service) create(ctx context.Context, data createHabitRequest) (*createH
 }
 
 func (s *Service) update(ctx context.Context, userID int64, data updateHabitRequest) (*getHabitResponse, error) {
-	var identifier string
-	if data.Identifier != nil {
-		identifier = *data.Identifier
-	}
-
-	habit, err := s.repo.get(ctx, int64(data.ID), identifier)
+	habit, err := s.repo.get(ctx, int64(data.ID), "")
 	if err != nil {
 		return nil, err
 	}
@@ -51,17 +46,19 @@ func (s *Service) update(ctx context.Context, userID int64, data updateHabitRequ
 	}
 
 	// handle habit privacy type
-	if *data.PrivacyStatus == "private" && habit.PrivacyStatus == "public" {
-		identifier = uuid.New().String()
-		habit.Identifier = &identifier
-		habit.PrivacyStatus = *data.PrivacyStatus
-	}
-	if *data.PrivacyStatus == "public" && habit.PrivacyStatus == "private" {
-		habit.Identifier = nil
-		habit.PrivacyStatus = *data.PrivacyStatus
-	}
-	if data.PrivacyStatus != nil && *data.PrivacyStatus != "public" && *data.PrivacyStatus != "private" {
-		return nil, errInvalidStatus
+	if data.PrivacyStatus != nil {
+		if *data.PrivacyStatus != "public" && *data.PrivacyStatus != "private" {
+			return nil, errInvalidStatus
+		}
+		if *data.PrivacyStatus == "private" && habit.PrivacyStatus == "public" {
+			identifier := uuid.New().String()
+			habit.Identifier = &identifier
+			habit.PrivacyStatus = *data.PrivacyStatus
+		}
+		if *data.PrivacyStatus == "public" && habit.PrivacyStatus == "private" {
+			habit.Identifier = nil
+			habit.PrivacyStatus = *data.PrivacyStatus
+		}
 	}
 
 	// do not allow habit type change (quantity based / duration based)
@@ -104,7 +101,7 @@ func (s *Service) update(ctx context.Context, userID int64, data updateHabitRequ
 	if data.DailyCount != nil {
 		habit.DailyCount = data.DailyCount
 	}
-	if habit.DailyDuration != nil {
+	if data.DailyDuration != nil {
 		habit.DailyDuration = data.DailyDuration
 	}
 

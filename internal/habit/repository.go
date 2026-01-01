@@ -23,7 +23,7 @@ func NewRepo(db *sql.DB) HabitRepository {
 func (r *postgresHabitRepository) create(ctx context.Context, req createHabitRequest) (*createHabitRequest, error) {
 	query := `
 	INSERT INTO habits(name, description, start_date, end_date, daily_count, daily_duration, privacy_status, identifier, created_by, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6 * INTERVAL '1 minute', $7, $8, $9, $10)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	RETURNING id`
 
 	err := r.db.QueryRowContext(
@@ -69,7 +69,7 @@ func (r *postgresHabitRepository) get(ctx context.Context, id int64, identifier 
 		u.last_name creator_last_name
 	FROM habits h
 	JOIN users u ON u.id = h.created_by
-	WHERE (h.identifier IS NOT NULL AND identifier = $1) OR h.id = $2`
+	WHERE h.identifier = $1 OR h.id = $2`
 
 	err := r.db.QueryRowContext(ctx, query, identifier, id).Scan(
 		&habit.ID,
@@ -107,7 +107,7 @@ func (r *postgresHabitRepository) update(ctx context.Context, data getHabitRespo
 		start_date = $3, 
 		end_date = $4, 
 		daily_count = $5, 
-		daily_duration = $6 * INTERVAL '1 minute',
+		daily_duration = $6,
 		privacy_status = $7,
 		identifier = $8
 	WHERE id = $9`

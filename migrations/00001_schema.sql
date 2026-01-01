@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS habits (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     daily_count INT,
-    daily_duration INTERVAL,
+    daily_duration BIGINT,
     privacy_status habit_status,
     identifier VARCHAR(50),
     created_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

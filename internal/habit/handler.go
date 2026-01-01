@@ -120,3 +120,23 @@ func (h *HabitHandler) HandleDelete(w http.ResponseWriter, r *http.Request) {
 
 	response.WriteJSON(w, http.StatusNoContent, response.Envelope{"message": "habit deleted successfully"})
 }
+
+func (h *HabitHandler) HandleGetPrivateHabit(w http.ResponseWriter, r *http.Request) {
+	identifier, err := utils.ReadIdentifierParam(r)
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	habit, err := h.service.repo.get(r.Context(), 0, identifier)
+	if err != nil {
+		response.InternalServerError(w, r, err, h.logger)
+		return
+	}
+	if habit == nil {
+		response.BadRequest(w, r, errNoHabitFound, h.logger)
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, response.Envelope{"data": habit})
+}

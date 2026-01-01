@@ -7,7 +7,7 @@ func (app *Application) Routes() *chi.Mux {
 
 	// test & health
 	r.Get("/health", app.health)
-	r.Get("/test", app.testHandler)
+	r.Get("/test/{identifier}", app.habitHandler.HandleGetPrivateHabit)
 
 	// register & login
 	r.Post("/api/v1/register", app.userHandler.Register)
@@ -26,6 +26,7 @@ func (app *Application) Routes() *chi.Mux {
 			// habits
 			r.Post("/api/v1/habits", app.habitHandler.HandleCreate)
 			r.Patch("/api/v1/habits/{id}", app.habitHandler.HandleUpdate)
+			r.Delete("/api/v1/habits/{id}", app.habitHandler.HandleDelete)
 		})
 	})
 
