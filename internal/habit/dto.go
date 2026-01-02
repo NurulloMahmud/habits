@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NurulloMahmud/habits/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -119,11 +120,8 @@ type HabitListQuery struct {
 	startDate   dateFilter
 	endDate     dateFilter
 	createdAt   dateFilter
-	pageSize    int
-	page        int
-	sort        string
-	sortSafe    []string
 	userRole    string
+	utils.Filter
 }
 
 func (h *HabitListQuery) getHabitType() (string, error) {
@@ -138,28 +136,4 @@ func (h *HabitListQuery) getHabitType() (string, error) {
 	}
 
 	return "", errHabitType
-}
-
-func (h *HabitListQuery) validateSort() error {
-	for _, val := range h.sortSafe {
-		if (h.sort == val) || (string(h.sort[0]) == "-" && h.sort[1:] == val) {
-			return nil
-		}
-	}
-	return errInvalidSort
-}
-
-func (h *HabitListQuery) getSort() string {
-	if string(h.sort[0]) == "-" {
-		return h.sort[1:] + " DESC"
-	}
-	return h.sort
-}
-
-func (h *HabitListQuery) limit() int {
-	return h.pageSize
-}
-
-func (h *HabitListQuery) offset() int {
-	return h.page
 }

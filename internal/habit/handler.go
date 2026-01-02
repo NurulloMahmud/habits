@@ -162,13 +162,13 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 	maxCreatedAtStr := utils.ReadString(r, "max_created_at", "")
 	privacyType := utils.ReadString(r, "status", "")
 
-	q.sort = utils.ReadString(r, "sort", "id")
-	q.pageSize = utils.ReadInt(r, "page_size", 50)
-	q.page = utils.ReadInt(r, "page", 1)
-	q.sortSafe = validSort
+	q.Sort = utils.ReadString(r, "sort", "id")
+	q.PageSize = utils.ReadInt(r, "page_size", 50)
+	q.Page = utils.ReadInt(r, "page", 1)
+	q.SortSafeList = validSort
 	q.userRole = user.UserRole
 
-	err := q.validateSort()
+	err := q.Filter.Validate()
 	if err != nil {
 		response.BadRequest(w, r, err, h.logger)
 		return

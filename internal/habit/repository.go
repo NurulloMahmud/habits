@@ -172,7 +172,7 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 			(h.created_at <= $7 OR $7 IS NULL) AND
 			(%s)
 			ORDER BY %s, id
-			LIMIT $8 OFFSET $9`, habitType, q.getSort())
+			LIMIT $8 OFFSET $9`, habitType, q.GetSort())
 
 	rows, err := r.db.QueryContext(
 		ctx, query,
@@ -183,8 +183,8 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 		q.endDate.maxDate,
 		q.createdAt.minDate,
 		q.createdAt.maxDate,
-		q.limit(),
-		q.offset(),
+		q.Limit(),
+		q.Offset(),
 	)
 
 	if err != nil {
@@ -218,11 +218,15 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 		if err != nil {
 			return nil, metaData, err
 		}
+		
+		if habit.PrivacyStatus == "private" && q.userRole != "admin" {
+			continue
+		}
 
 		habit.Creator = creator
 		data = append(data, &habit)
 	}
 
-	metaData = utils.CalculateMetadata(totalRecords, q.page, q.pageSize)
+	metaData = utils.CalculateMetadata(totalRecords, q.Page, q.PageSize)
 	return data, metaData, nil
 }
