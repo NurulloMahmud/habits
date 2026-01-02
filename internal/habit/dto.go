@@ -106,3 +106,60 @@ type getHabitResponse struct {
 	CreatedAt     time.Time    `json:"created_at"`
 	Creator       habitCreator `json:"creator"`
 }
+
+type dateFilter struct {
+	minDate *time.Time
+	maxDate *time.Time
+}
+
+type HabitListQuery struct {
+	search      string
+	habitType   string
+	privacyType string
+	startDate   dateFilter
+	endDate     dateFilter
+	createdAt   dateFilter
+	pageSize    int
+	page        int
+	sort        string
+	sortSafe    []string
+	userRole    string
+}
+
+func (h *HabitListQuery) getHabitType() (string, error) {
+	if h.habitType == "" {
+		return " 1=1", nil
+	}
+	if h.habitType == "quantity" {
+		return " h.daily_duration IS NULL ", nil
+	}
+	if h.habitType == "duration" {
+		return " h.daily_count IS NULL ", nil
+	}
+
+	return "", errHabitType
+}
+
+func (h *HabitListQuery) validateSort() error {
+	for _, val := range h.sortSafe {
+		if (h.sort == val) || (string(h.sort[0]) == "-" && h.sort[1:] == val) {
+			return nil
+		}
+	}
+	return errInvalidSort
+}
+
+func (h *HabitListQuery) getSort() string {
+	if string(h.sort[0]) == "-" {
+		return h.sort[1:] + " DESC"
+	}
+	return h.sort
+}
+
+func (h *HabitListQuery) limit() int {
+	return h.pageSize
+}
+
+func (h *HabitListQuery) offset() int {
+	return h.page
+}

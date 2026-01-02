@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	cx "github.com/NurulloMahmud/habits/pkg/context"
+	"github.com/NurulloMahmud/habits/pkg/utils"
 	"github.com/google/uuid"
 )
 
@@ -13,6 +14,9 @@ var (
 	errNoHabitFound = errors.New("No habit data found with given id/identifier")
 	errNotOwner     = errors.New("You are not the owner of this habit")
 	errTypeChange   = errors.New("Habit type cannot be changed. You can only update type's value")
+	errHabitType    = errors.New("habit type can only be quantity or duration")
+	errDateQuery    = errors.New("min date value must not be after max date")
+	errInvalidSort  = errors.New("Invalid sort field value")
 )
 
 type Service struct {
@@ -127,4 +131,35 @@ func (s *Service) delete(ctx context.Context, user cx.User, habitID int64) error
 	}
 
 	return s.repo.delete(ctx, habitID)
+}
+
+func (s *Service) list(ctx context.Context, query HabitListQuery) ([]*getHabitResponse, utils.Metadata, error) {
+	var metaData utils.Metadata
+	_, err := query.getHabitType()
+	if err != nil {
+		return nil, metaData, errHabitType
+	}
+
+	if query.startDate.minDate != nil && query.startDate.maxDate != nil {
+		if query.startDate.maxDate.Before(*query.startDate.minDate) {
+			return nil, metaData, errDateQuery
+		}
+	}
+	if query.endDate.minDate != nil && query.endDate.maxDate != nil {
+		if query.endDate.maxDate.Before(*query.endDate.minDate) {
+			return nil, metaData, errDateQuery
+		}
+	}
+	if query.createdAt.minDate != nil && query.createdAt.maxDate != nil {
+		if query.createdAt.maxDate.Before(*query.createdAt.minDate) {
+			return nil, metaData, errDateQuery
+		}
+	}
+
+	data, metaData, err := s.repo.list(ctx, query)
+	if err != nil {
+		return nil, metaData, err
+	}
+
+	return data, metaData, nil
 }

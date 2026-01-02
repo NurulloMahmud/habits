@@ -17,6 +17,8 @@ func (app *Application) Routes() *chi.Mux {
 		r.Use(app.middleware.Authenticate)
 		r.Get("/test", app.testHandler)
 
+		r.Get("/api/v1/habits", app.habitHandler.HandleGetHabitList)
+
 		// valid user required endpoints
 		r.Group(func(r chi.Router) {
 			r.Use(app.middleware.RequireUser)
