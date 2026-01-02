@@ -179,7 +179,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	q.search = search
+	q.Search = search
 	q.habitType = habitType
 	q.privacyType = privacyType
 

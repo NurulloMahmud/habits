@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/NurulloMahmud/habits/pkg/context"
 	cx "github.com/NurulloMahmud/habits/pkg/context"
 	"github.com/NurulloMahmud/habits/pkg/response"
+	"github.com/NurulloMahmud/habits/pkg/utils"
 )
 
 var (
@@ -104,7 +106,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	user := cx.GetUser(r)
 	err = h.service.update(r.Context(), user.ID, req)
-	
+
 	if err != nil {
 		switch err {
 		case errInvalidCredentials:
@@ -120,4 +122,52 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.WriteJSON(w, http.StatusOK, response.Envelope{"message": "user updated successfully"})
+}
+
+func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
+	var input ListUserInput
+
+	user := context.GetUser(r)
+	if user.UserRole != "admin" {
+		response.Unauthorized(w, r, "Unauthorized")
+		return
+	}
+
+	input.Search = utils.ReadString(r, "search", "")
+	input.Filter.Page = utils.ReadInt(r, "page", 1)
+	input.Filter.PageSize = utils.ReadInt(r, "page_size", 50)
+	input.Filter.Sort = utils.ReadString(r, "sort", "id")
+	input.Filter.SortSafeList = []string{"id", "email", "first_name", "last_name"}
+
+	is_active, err := utils.ReadBool(r, "is_active")
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+	is_locked, err := utils.ReadBool(r, "is_locked")
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	input.IsActive = is_active
+	input.IsLocked = is_locked
+
+	err = input.ValidateInput()
+	if err != nil {
+		response.BadRequest(w, r, err, h.logger)
+		return
+	}
+
+	users, metadata, err := h.service.list(r.Context(), input)
+	if err != nil {
+		response.InternalServerError(w, r, err, h.logger)
+		return
+	}
+
+	if users == nil {
+		response.WriteJSON(w, http.StatusOK, response.Envelope{"result": []any{}, "message": "no user found"})
+	}
+
+	response.WriteJSON(w, http.StatusOK, response.Envelope{"result": users, "metadata": metadata})
 }

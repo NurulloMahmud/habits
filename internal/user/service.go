@@ -8,6 +8,7 @@ import (
 
 	"github.com/NurulloMahmud/habits/config"
 	"github.com/NurulloMahmud/habits/internal/auth"
+	"github.com/NurulloMahmud/habits/pkg/utils"
 )
 
 var (
@@ -174,4 +175,8 @@ func (s *UserService) update(ctx context.Context, id int64, req updateUserReques
 	}
 
 	return nil
+}
+
+func (s *UserService) list(ctx context.Context, q ListUserInput) ([]*User, *utils.Metadata, error) {
+	return s.repo.List(ctx, q)
 }

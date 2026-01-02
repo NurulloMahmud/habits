@@ -114,7 +114,6 @@ type dateFilter struct {
 }
 
 type HabitListQuery struct {
-	search      string
 	habitType   string
 	privacyType string
 	startDate   dateFilter

@@ -176,7 +176,7 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 
 	rows, err := r.db.QueryContext(
 		ctx, query,
-		q.search,
+		q.Search,
 		q.startDate.minDate,
 		q.startDate.maxDate,
 		q.endDate.minDate,

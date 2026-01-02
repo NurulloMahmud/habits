@@ -4,6 +4,8 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+
+	"github.com/NurulloMahmud/habits/pkg/utils"
 )
 
 var (
@@ -120,4 +122,16 @@ func (r *updateUserRequest) validatePasswordUpdate() error {
 		return errPasswordsNotMatch
 	}
 	return nil
+}
+
+type ListUserInput struct {
+	UserRole string
+	IsActive *bool
+	IsLocked *bool
+	utils.Filter
+}
+
+func (u *ListUserInput) ValidateInput() error {
+	err := u.Filter.Validate()
+	return err
 }

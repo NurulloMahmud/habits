@@ -4,12 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"github.com/NurulloMahmud/habits/pkg/utils"
 )
 
 type Repository interface {
 	Create(ctx context.Context, u User) (*User, error)
 	Get(ctx context.Context, id int64, email string) (*User, error)
-	List()
+	List(ctx context.Context, q ListUserInput) ([]*User, *utils.Metadata, error)
 	Update(ctx context.Context, user User) error
 	Delete()
 	Unlock(ctx context.Context, id int64) error
@@ -79,8 +82,70 @@ func (r *postgresRepo) Get(ctx context.Context, id int64, email string) (*User, 
 	return &user, nil
 }
 
-func (r *postgresRepo) List() {
-	return
+func (r *postgresRepo) List(ctx context.Context, q ListUserInput) ([]*User, *utils.Metadata, error) {
+	result := []*User{}
+	metadata := utils.Metadata{}
+	totalRecords := 0
+
+	query := fmt.Sprintf(`
+		SELECT COUNT(*) OVER(), id, email, first_name, last_name, user_role, is_active, is_locked, last_failed_login, failed_attempts, created_at
+		FROM users
+		WHERE (
+			$1 = '' OR
+			email ILIKE $1 || '%%' OR
+			first_name ILIKE $1 || '%%' OR
+			last_name ILIKE $1 || '%%'
+		)
+		AND ($2 IS NULL OR is_active = $2)
+		AND ($3 IS NULL OR is_locked = $3)
+		AND ($4 = '' OR user_role = $4)
+		ORDER BY %s, id ASC
+		LIMIT $5 OFFSET $6`, q.GetSort())
+
+	rows, err := r.db.QueryContext(
+		ctx, query,
+		q.Search,
+		q.IsActive,
+		q.IsLocked,
+		q.UserRole,
+		q.Limit(),
+		q.Offset(),
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil, nil
+		}
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := &User{}
+
+		err = rows.Scan(
+			&totalRecords,
+			&user.ID,
+			&user.Email,
+			&user.FirstName,
+			&user.LastName,
+			&user.UserRole,
+			&user.IsActive,
+			&user.IsLocked,
+			&user.LastFailedLogin,
+			&user.FailedAttempts,
+			&user.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, nil, err
+		}
+		result = append(result, user)
+	}
+
+	metadata = utils.CalculateMetadata(totalRecords, int(q.Page), int(q.PageSize))
+
+	return result, &metadata, nil
 }
 
 func (r *postgresRepo) Update(ctx context.Context, user User) error {

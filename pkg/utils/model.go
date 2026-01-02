@@ -3,6 +3,7 @@ package utils
 import "errors"
 
 type Filter struct {
+	Search       string
 	Page         int
 	PageSize     int
 	Sort         string

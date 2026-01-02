@@ -15,7 +15,7 @@ func (app *Application) Routes() *chi.Mux {
 
 	r.Group(func(r chi.Router) {
 		r.Use(app.middleware.Authenticate)
-		r.Get("/test", app.testHandler)
+		r.Get("/test", app.userHandler.List)
 
 		r.Get("/api/v1/habits", app.habitHandler.HandleGetHabitList)
 
