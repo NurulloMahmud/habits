@@ -136,3 +136,16 @@ func (h *HabitListQuery) getHabitType() (string, error) {
 
 	return "", errHabitType
 }
+
+func (h *HabitListQuery) getPrivacyType() string {
+	if h.userRole == "admin" {
+		if h.privacyType == "" {
+			return "1 = 1"
+		} else if h.privacyType == "private" {
+			return "h.privacy_status = 'private'"
+		} else {
+			return "h.privacy_status = 'public'"
+		}
+	}
+	return "h.privacy_status = 'public'"
+}

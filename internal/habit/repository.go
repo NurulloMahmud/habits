@@ -163,6 +163,7 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 		FROM habits h
 		JOIN users u ON u.id = h.created_by
 		WHERE 
+			(%s) AND
 			(h.name ILIKE $1 || '%%' OR $1 = '') AND
 			(h.start_date >= $2 OR $2 IS NULL) AND
 			(h.start_date <= $3 OR $3 IS NULL) AND
@@ -172,7 +173,7 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 			(h.created_at <= $7 OR $7 IS NULL) AND
 			(%s)
 			ORDER BY %s, id
-			LIMIT $8 OFFSET $9`, habitType, q.GetSort())
+			LIMIT $8 OFFSET $9`, q.getPrivacyType(), habitType, q.GetSort())
 
 	rows, err := r.db.QueryContext(
 		ctx, query,
@@ -218,7 +219,7 @@ func (r *postgresHabitRepository) list(ctx context.Context, q HabitListQuery) ([
 		if err != nil {
 			return nil, metaData, err
 		}
-		
+
 		if habit.PrivacyStatus == "private" && q.userRole != "admin" {
 			continue
 		}

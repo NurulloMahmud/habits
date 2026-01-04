@@ -142,18 +142,13 @@ func (h *HabitHandler) HandleGetPrivateHabit(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request) {
-	var (
-		q         HabitListQuery
-		startDate dateFilter
-		endDate   dateFilter
-		createdAt dateFilter
-	)
+	var q HabitListQuery
 
 	user := context.GetUser(r)
 	validSort := []string{"id", "created_at", "start_date", "end_date"}
 
-	search := utils.ReadString(r, "search", "")
-	habitType := utils.ReadString(r, "type", "")
+	q.Search = utils.ReadString(r, "search", "")
+	q.habitType = utils.ReadString(r, "type", "")
 	minStartDateStr := utils.ReadString(r, "min_start", "")
 	maxStartDateStr := utils.ReadString(r, "max_start", "")
 	minEndDateStr := utils.ReadString(r, "min_end", "")
@@ -174,13 +169,13 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if privacyType == "private" && user.UserRole != "admin" {
-		response.Unauthorized(w, r, "You can only query public habits")
-		return
+	if user.UserRole != "admin" {
+		if privacyType == "private" {
+			response.Unauthorized(w, r, "You can only view public habits")
+			return
+		}
+		privacyType = "public"
 	}
-
-	q.Search = search
-	q.habitType = habitType
 	q.privacyType = privacyType
 
 	if minStartDateStr != "" {
@@ -189,7 +184,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		startDate.minDate = minDate
+		q.startDate.minDate = minDate
 	}
 	if maxStartDateStr != "" {
 		maxDate, err := utils.ConvertStrToDate(maxStartDateStr)
@@ -197,7 +192,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		startDate.maxDate = maxDate
+		q.startDate.maxDate = maxDate
 	}
 
 	if minEndDateStr != "" {
@@ -206,7 +201,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		endDate.minDate = minDate
+		q.endDate.minDate = minDate
 	}
 	if maxEndtDateStr != "" {
 		maxDate, err := utils.ConvertStrToDate(maxEndtDateStr)
@@ -214,7 +209,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		endDate.maxDate = maxDate
+		q.endDate.maxDate = maxDate
 	}
 
 	if minCreatedAtStr != "" {
@@ -223,7 +218,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		createdAt.minDate = minDate
+		q.createdAt.minDate = minDate
 	}
 	if maxCreatedAtStr != "" {
 		maxDate, err := utils.ConvertStrToDate(maxCreatedAtStr)
@@ -231,7 +226,7 @@ func (h *HabitHandler) HandleGetHabitList(w http.ResponseWriter, r *http.Request
 			response.BadRequest(w, r, err, h.logger)
 			return
 		}
-		createdAt.maxDate = maxDate
+		q.createdAt.maxDate = maxDate
 	}
 
 	data, metaData, err := h.service.list(r.Context(), q)
