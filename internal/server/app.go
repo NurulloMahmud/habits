@@ -28,9 +28,16 @@ type Application struct {
 func NewApplication(cfg config.Config) (*Application, error) {
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	// spin up postgres db
 	pgDB, err := database.New(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
+	}
+
+	// spin up mongodb
+	err = database.ConnectMongo(cfg.MongoDBURL)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	err = database.Migrate(pgDB, migrations.FS, ".")

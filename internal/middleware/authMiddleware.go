@@ -34,6 +34,7 @@ func (m *Middleware) Authenticate(next http.Handler) http.Handler {
 		token := headerParts[1]
 		claims, err := auth.VerifyToken(token, m.cfg.JWTSecret)
 		if err != nil {
+			m.logger.Printf("error -> ", err.Error())
 			response.Unauthorized(w, r, "invalid token")
 			return
 		}

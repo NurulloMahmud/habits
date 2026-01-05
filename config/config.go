@@ -6,6 +6,7 @@ type Config struct {
 	Env         string
 	ServerAddr  string
 	DatabaseURL string
+	MongoDBURL  string
 	JWTSecret   string
 }
 
@@ -14,6 +15,7 @@ func Load() *Config {
 		Env:         getEnv("ENV", "development"),
 		ServerAddr:  getEnv("SERVER_ADDRESS", ":8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/habits?sslmode=disable"),
+		MongoDBURL:  getEnv("MONGO_DB_URL", "mongodb://localhost:27017"),
 		JWTSecret:   getEnv("JWT_SECRET", "9b36f2a2-f8a1-4826-90a6-71d16ca14932"),
 	}
 }
