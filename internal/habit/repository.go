@@ -20,7 +20,7 @@ type postgresHabitRepository struct {
 	db *sql.DB
 }
 
-func NewRepo(db *sql.DB) HabitRepository {
+func NewPostgresRepository(db *sql.DB) HabitRepository {
 	return &postgresHabitRepository{db: db}
 }
 

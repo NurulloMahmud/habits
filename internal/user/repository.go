@@ -22,7 +22,7 @@ type postgresRepo struct {
 	db *sql.DB
 }
 
-func NewRepository(db *sql.DB) Repository {
+func NewPostgresRepository(db *sql.DB) Repository {
 	return &postgresRepo{db: db}
 }
 

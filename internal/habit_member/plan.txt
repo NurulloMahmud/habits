@@ -1,0 +1,4 @@
+• users should join into habits if habit is public
+• users leave join request if habit is private
+• private habits can only be shared by members (via email) but request is approved by owner
+• owner can revoke membership of the user in habit

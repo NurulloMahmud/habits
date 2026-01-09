@@ -23,7 +23,7 @@ type Config struct {
 func Load() *Config {
 	rps, _ := strconv.ParseFloat(getEnv("LIMITER_RPS", "2"), 64)
 	burst, _ := strconv.Atoi(getEnv("LIMITER_BURST", "4"))
-	enabled, _ := strconv.ParseBool(getEnv("LIMITER_ENABLED", "True"))
+	enabled, _ := strconv.ParseBool(getEnv("LIMITER_ENABLED", "true"))
 
 	appLimiter := Limiter{
 		RPS:      rps,
