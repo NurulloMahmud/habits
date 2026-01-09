@@ -25,12 +25,18 @@ func NewRepo(db *sql.DB) HabitRepository {
 }
 
 func (r *postgresHabitRepository) create(ctx context.Context, req createHabitRequest) (*createHabitRequest, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
 	query := `
 	INSERT INTO habits(name, description, start_date, end_date, daily_count, daily_duration, privacy_status, identifier, created_by, created_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	RETURNING id`
 
-	err := r.db.QueryRowContext(
+	err = tx.QueryRowContext(
 		ctx, query,
 		req.Name,
 		req.Description,
@@ -48,7 +54,15 @@ func (r *postgresHabitRepository) create(ctx context.Context, req createHabitReq
 		return nil, err
 	}
 
-	return &req, nil
+	memberInsertQuery := `
+	INSERT INTO habit_members (habit_id, member_id) 
+	VALUES ($1, $2) 
+	RETURNING id`
+	_, err = tx.ExecContext(
+		ctx, memberInsertQuery, req.ID, req.CreatedBy,
+	)
+
+	return &req, err
 }
 
 func (r *postgresHabitRepository) get(ctx context.Context, id int64, identifier string) (*getHabitResponse, error) {
