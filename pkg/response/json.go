@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -47,4 +48,12 @@ func Forbidden(w http.ResponseWriter, r *http.Request, msg string) {
 	requestMethod := r.Method
 	log.Printf("[ERROR] FORBIDDEN REQUEST!\nURL: %s\nMethod: %s\nError: %v\n", requestURL, requestMethod, msg)
 	WriteJSON(w, http.StatusForbidden, Envelope{"error": msg})
+}
+
+func RateLimitExceeded(w http.ResponseWriter, r *http.Request) {
+	requestURL := r.URL.String()
+	requestMethod := r.Method
+	msg := fmt.Sprintf("Too many request by IP: %s", r.RemoteAddr)
+	log.Printf("[ERROR] RATE LIMIT EXCEEDED!\nURL: %s\nMethod: %s\nError: %v\n", requestURL, requestMethod, msg)
+	WriteJSON(w, http.StatusTooManyRequests, Envelope{"error": "Too many requests, please try again later"})
 }
