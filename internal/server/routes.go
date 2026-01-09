@@ -5,6 +5,9 @@ import "github.com/go-chi/chi/v5"
 func (app *Application) Routes() *chi.Mux {
 	r := chi.NewRouter()
 
+	// r.NotFound()
+	// r.MethodNotAllowed()
+
 	// test & health
 	r.Get("/health", app.health)
 	r.Get("/test/{identifier}", app.habitHandler.HandleGetPrivateHabit)
