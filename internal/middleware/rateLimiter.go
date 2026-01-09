@@ -26,16 +26,18 @@ func (m *Middleware) RateLimit(next http.Handler) http.Handler {
 	)
 
 	go func() {
-		time.Sleep(time.Minute)
-		mu.Lock()
+		for {
+			time.Sleep(time.Minute)
+			mu.Lock()
 
-		for ip, client := range clients {
-			if time.Since(client.lastSeen) >= time.Minute*3 {
-				delete(clients, ip)
+			for ip, client := range clients {
+				if time.Since(client.lastSeen) >= time.Minute*3 {
+					delete(clients, ip)
+				}
 			}
-		}
 
-		mu.Unlock()
+			mu.Unlock()
+		}
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
