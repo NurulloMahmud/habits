@@ -62,6 +62,12 @@ func (r *postgresHabitRepository) create(ctx context.Context, req createHabitReq
 		ctx, memberInsertQuery, req.ID, req.CreatedBy,
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
+
 	return &req, err
 }
 
